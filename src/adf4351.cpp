@@ -89,10 +89,12 @@ uint32_t  Reg::getbf(uint8_t start, uint8_t len)
 // ADF4351 settings
 
 
-ADF4351::ADF4351(byte pin, uint8_t mode, unsigned long  speed, uint8_t order )
+ADF4351::ADF4351(SPIClass* spi,byte pinSlaveSelect, byte pinChipEnable=-1,byte pinLockDetect=-1)
 {
-  spi_settings = SPISettings(speed, order, mode) ;
-  pinSS = pin ;
+  this->_spi = spi;
+  this->_pinSlaveSelect = pinSlaveSelect;
+  this->_pinChipEnable = pinChipEnable;
+  this->_pinLockDetect = pinLockDetect;
   // settings for 100 mhz internal
   reffreq = REF_FREQ_DEFAULT ;
   enabled = false ;
@@ -105,15 +107,19 @@ ADF4351::ADF4351(byte pin, uint8_t mode, unsigned long  speed, uint8_t order )
   ClkDiv = 150 ;
   Prescaler = 0 ;
   pwrlevel = 0 ;
+  
 }
 
 void ADF4351::init()
 {
-  pinMode(pinSS, OUTPUT) ;
-  digitalWrite(pinSS, LOW) ;
-  pinMode(PIN_CE, OUTPUT) ;
-  pinMode(PIN_LD, INPUT) ;
-  SPI.begin();
+
+  pinMode(_pinSlaveSelect, OUTPUT) ;
+  digitalWrite(_pinSlaveSelect, LOW) ;
+  if(_pinChipEnable>=0)
+  pinMode(_pinChipEnable, OUTPUT) ;
+  if(_pinLockDetect>=0)
+  pinMode(_pinLockDetect, INPUT) ;
+  _spi->begin();
 } ;
 
 
@@ -317,14 +323,17 @@ int ADF4351::setrf(uint32_t f)
 
 void ADF4351::enable()
 {
+
   enabled = true ;
-  digitalWrite(PIN_CE, HIGH) ;
+  if(_pinChipEnable>=0)
+    digitalWrite(_pinChipEnable, HIGH) ;
 }
 
 void ADF4351::disable()
 {
   enabled = false ;
-  digitalWrite(PIN_CE, LOW) ;
+  if(_pinChipEnable>=0)
+    digitalWrite(_pinChipEnable, LOW) ;
 }
 
 
@@ -332,17 +341,17 @@ void ADF4351::writeDev(int n, Reg r)
 {
   byte  txbyte ;
   int i ;
-  digitalWrite(pinSS, LOW) ;
+  digitalWrite(_pinSlaveSelect, LOW) ;
   delayMicroseconds(10) ;
   i=n ; // not used 
   for ( i = 3 ; i > -1 ; i--) {
     txbyte = (byte) (r.whole >> (i * 8)) ;
-    SPI.transfer(txbyte) ;
+    _spi->transfer(txbyte) ;
   }
 
-  digitalWrite(pinSS, HIGH) ;
+  digitalWrite(_pinSlaveSelect, HIGH) ;
   delayMicroseconds(5) ;
-  digitalWrite(pinSS, LOW) ;
+  digitalWrite(_pinSlaveSelect, LOW) ;
 }
 
 

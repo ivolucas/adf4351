@@ -27,12 +27,12 @@ extern uint32_t steps[];  ///< Array of Frequency Step Values
 #define REF_FREQ_DEFAULT 100000000UL  ///< Default Reference Frequency
 
 
-#define PIN_CE   2    ///< Ard Pin for Chip Enable
-#define PIN_LD   8    ///< Ard Pin for Lock Detect
-#define PIN_SS   9    ///< Ard Pin for SPI Slave Select
-#define PIN_MOSI  11  ///< Ard Pin for SPI MOSI
-#define PIN_MISO  12  ///< Ard Pin for SPI MISO
-#define PIN_SCK  13   ///< Ard Pin for SPI CLK
+#define ADF4351_PIN_CE   2    ///< Ard Pin for Chip Enable
+#define ADF4351_PIN_LD   8    ///< Ard Pin for Lock Detect
+#define ADF4351_PIN_SS   9    ///< Ard Pin for SPI Slave Select
+#define ADF4351_PIN_MOSI  11  ///< Ard Pin for SPI MOSI
+#define ADF4351_PIN_MISO  12  ///< Ard Pin for SPI MISO
+#define ADF4351_PIN_SCK  13   ///< Ard Pin for SPI CLK
 
 
 /*!
@@ -107,14 +107,13 @@ class ADF4351
   public:
     /*!
        Constructor
-       creates an object and sets the SPI parameters.
-       see the Arduino SPI library for the parameter values.
-       @param pin the SPI Slave Select Pin to use
-       @param mode the SPI Mode (see SPI mode define values)
-       @param speed the SPI Serial Speed (see SPI speed values)
-       @param order the SPI bit order (see SPI bit order values)
+       creates an object .
+       @param spi spi config to use
+       @param pinSlaveSelect the SPI Slave Select Pin to use
+       @param pinChipEnable the pin to use to enable the chip
+       @param pinLockDetect the pin to setup for input of the adf lock
     */
-    ADF4351(byte pin, uint8_t mode, unsigned long  speed, uint8_t order ) ;
+    ADF4351(SPIClass* spi,byte pinSlaveSelect, byte pinChipEnable=-1,byte pinLockDetect=-1 ) ;
     /*!
        initialize and start the SPI interface. Call this once after instanciating
        the object
@@ -175,13 +174,26 @@ class ADF4351
     */
     uint32_t gcd_iter(uint32_t u, uint32_t v) ;
     /*!
-       stores the SPI settings
+       stores the spi
     */
-    SPISettings spi_settings;
+
+    SPIClass * _spi;
+    
+    /*!
+       stores the Chip Enable Pin
+    */
+    uint8_t _pinChipEnable;
+
+   /*!
+       stores the Lock Detect Pin
+    */
+    uint8_t _pinLockDetect;
+
     /*!
        stores the SPI Slave Select Pin
     */
-    uint8_t pinSS ;
+    uint8_t _pinSlaveSelect;
+
     /*!
        array for storing the working register values (used for writing)
     */
