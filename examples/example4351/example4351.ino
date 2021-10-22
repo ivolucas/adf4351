@@ -7,9 +7,11 @@
 
 #define SWVERSION "1.0"
 
-#define PIN_SS 9  ///< SPI slave select pin, default value
+#define ADF4351_PIN_SS 9  ///< SPI slave select pin, default value
 
-ADF4351  vfo(PIN_SS, SPI_MODE0, 1000000UL , MSBFIRST) ;
+
+
+ADF4351  vfo(&SPI, ADF4351_PIN_SS, ADF4351_PIN_CE, ADF4351_PIN_LD) ;
 
 
 void setup()
