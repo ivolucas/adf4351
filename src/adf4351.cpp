@@ -89,7 +89,7 @@ uint32_t  Reg::getbf(uint8_t start, uint8_t len)
 // ADF4351 settings
 
 
-ADF4351::ADF4351(SPIClass* spi,byte pinSlaveSelect, byte pinChipEnable=-1,byte pinLockDetect=-1)
+ADF4351::ADF4351(SPIClass* spi,byte pinSlaveSelect, byte pinChipEnable,byte pinLockDetect)
 {
   this->_spi = spi;
   this->_pinSlaveSelect = pinSlaveSelect;
