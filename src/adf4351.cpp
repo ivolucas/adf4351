@@ -108,6 +108,7 @@ ADF4351::ADF4351(byte pinClk, byte pinData,byte pinSlaveSelect, byte pinChipEnab
   ClkDiv = 150 ;
   Prescaler = 0 ;
   pwrlevel = 0 ;
+  muxOut = ADF_MUX_OUT_DIGITAL_LOCK_DETECT;
   
 }
 
@@ -256,7 +257,7 @@ int  ADF4351::setf(uint32_t freq)
   R[2].setbf(14, 10, RCounter) ; //  r counter
   R[2].setbf(24, 1, RD1Rdiv2)  ; // RD1_RDiv2
   R[2].setbf(25, 1, RD2refdouble)  ; // RD2refdouble
-  // R[2].setbf(26,3,0) ; //  muxout, not used
+  R[2].setbf(26,3, muxOut) ; //  muxout
   // (29,2,0) low noise and spurs mode
   // R3
   R[3].set(0UL) ;

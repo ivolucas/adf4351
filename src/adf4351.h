@@ -32,6 +32,15 @@ extern uint32_t steps[];  ///< Array of Frequency Step Values
 #define ADF4351_PIN_MISO  12  ///< Ard Pin for SPI MISO
 #define ADF4351_PIN_SCK  13   ///< Ard Pin for SPI CLK
 
+#define ADF_MUX_OUT_THREE_STATE 0
+#define ADF_MUX_OUT_DV_DD 1
+#define ADF_MUX_OUT_DGND 2
+#define ADF_MUX_OUT_R_COUNTER 3 
+#define ADF_MUX_OUT_N_DIVIDER 4
+#define ADF_MUX_OUT_ANALOG_LOCK_DETECT 5
+#define ADF_MUX_OUT_DIGITAL_LOCK_DETECT 6
+#define ADF_MUX_OUT_RESERVED 7
+
 
 /*!
    @brief Stores a device register value
@@ -287,6 +296,11 @@ class ADF4351
        allowed values 0-4
     */
     byte pwrlevel ;
+
+    /*!
+       Select muxout
+    */
+    uint8_t muxOut ;
 
 };
 
