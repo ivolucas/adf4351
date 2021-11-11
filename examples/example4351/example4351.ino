@@ -7,11 +7,10 @@
 
 #define SWVERSION "1.0"
 
-#define ADF4351_PIN_SS 9  ///< SPI slave select pin, default value
 
 
 
-ADF4351  vfo(&SPI, ADF4351_PIN_SS, ADF4351_PIN_CE, ADF4351_PIN_LD) ;
+ADF4351  vfo(ADF4351_PIN_CLK, ADF4351_PIN_DATA,ADF4351_PIN_LE, ADF4351_PIN_CE, ADF4351_PIN_LD) ;
 
 
 void setup()
@@ -19,7 +18,6 @@ void setup()
   Serial.begin(9600) ;
   Serial.print("Hello adf4351 demo v") ;
   Serial.println(SWVERSION) ;
-  Wire.begin() ;
   /*!
      setup the chip (for a 10 mhz ref freq)
      most of these are defaults
