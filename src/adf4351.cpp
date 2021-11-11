@@ -89,9 +89,10 @@ uint32_t  Reg::getbf(uint8_t start, uint8_t len)
 // ADF4351 settings
 
 
-ADF4351::ADF4351(SPIClass* spi,byte pinSlaveSelect, byte pinChipEnable,byte pinLockDetect)
+ADF4351::ADF4351(byte pinClk, byte pinData,byte pinSlaveSelect, byte pinChipEnable,byte pinLockDetect)
 {
-  this->_spi = spi;
+  this->_pinClk = pinClk;
+  this->_pinData = pinData;
   this->_pinSlaveSelect = pinSlaveSelect;
   this->_pinChipEnable = pinChipEnable;
   this->_pinLockDetect = pinLockDetect;
@@ -113,13 +114,17 @@ ADF4351::ADF4351(SPIClass* spi,byte pinSlaveSelect, byte pinChipEnable,byte pinL
 void ADF4351::init()
 {
 
+  pinMode(_pinClk, OUTPUT) ;
+  digitalWrite(_pinClk, LOW) ;
+  pinMode(_pinData, OUTPUT) ;
+  digitalWrite(_pinData, LOW) ;
   pinMode(_pinSlaveSelect, OUTPUT) ;
   digitalWrite(_pinSlaveSelect, LOW) ;
   if(_pinChipEnable>=0)
   pinMode(_pinChipEnable, OUTPUT) ;
   if(_pinLockDetect>=0)
   pinMode(_pinLockDetect, INPUT) ;
-  _spi->begin();
+  
 } ;
 
 
@@ -339,15 +344,29 @@ void ADF4351::disable()
 
 void ADF4351::writeDev(int n, Reg r)
 {
-  byte  txbyte ;
+  uint32_t _regData ;
   int i ;
   digitalWrite(_pinSlaveSelect, LOW) ;
   delayMicroseconds(10) ;
   i=n ; // not used 
-  for ( i = 3 ; i > -1 ; i--) {
-    txbyte = (byte) (r.whole >> (i * 8)) ;
-    _spi->transfer(txbyte) ;
-  }
+  _regData = r.whole;
+  for(int i=0; i<32; i++)
+	{
+		if(((_regData<<i)&0x80000000)==0x80000000)
+		{
+			digitalWrite(_pinData,1);
+			
+		}
+		else
+		{
+			digitalWrite(_pinData,0) ;
+			
+		}
+
+		digitalWrite(_pinClk, HIGH);
+		delayMicroseconds(5);
+		digitalWrite(_pinClk, LOW);
+	}
 
   digitalWrite(_pinSlaveSelect, HIGH) ;
   delayMicroseconds(5) ;

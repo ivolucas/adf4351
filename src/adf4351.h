@@ -8,8 +8,6 @@
 #ifndef ADF4351_H
 #define ADF4351_H
 #include <Arduino.h>
-#include <Wire.h>
-#include <SPI.h>
 #include <stdint.h>
 #include <BigNumber.h>
 
@@ -24,7 +22,7 @@ extern uint32_t steps[];  ///< Array of Frequency Step Values
 #define ADF_PFD_MAX   32000000.0      ///< Maximum Frequency for Phase Detector
 #define ADF_PFD_MIN   125000.0        ///< Minimum Frequency for Phase Detector
 #define ADF_REFIN_MAX   250000000UL   ///< Maximum Reference Frequency
-#define REF_FREQ_DEFAULT 100000000UL  ///< Default Reference Frequency
+#define REF_FREQ_DEFAULT 10000000UL  ///< Default Reference Frequency
 
 
 #define ADF4351_PIN_CE   2    ///< Ard Pin for Chip Enable
@@ -108,12 +106,13 @@ class ADF4351
     /*!
        Constructor
        creates an object .
-       @param spi spi config to use
+       @param pinClk spi config to use
+       @param pinData spi config to use
        @param pinSlaveSelect the SPI Slave Select Pin to use
        @param pinChipEnable the pin to use to enable the chip
        @param pinLockDetect the pin to setup for input of the adf lock
     */
-    ADF4351(SPIClass* spi,byte pinSlaveSelect, byte pinChipEnable=-1,byte pinLockDetect=-1 ) ;
+    ADF4351(byte pinClk, byte pinData,byte pinSlaveSelect, byte pinChipEnable=-1,byte pinLockDetect=-1 ) ;
     /*!
        initialize and start the SPI interface. Call this once after instanciating
        the object
@@ -177,8 +176,16 @@ class ADF4351
        stores the spi
     */
 
-    SPIClass * _spi;
-    
+    /*!
+       stores the CLK Pin
+    */
+    uint8_t _pinClk;
+
+     /*!
+       stores the DATA Pin
+    */
+    uint8_t _pinData;
+
     /*!
        stores the Chip Enable Pin
     */
