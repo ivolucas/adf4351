@@ -96,7 +96,7 @@ ADF4351::ADF4351(byte pinClk, byte pinData,byte pinSlaveSelect, byte pinChipEnab
   this->_pinSlaveSelect = pinSlaveSelect;
   this->_pinChipEnable = pinChipEnable;
   this->_pinLockDetect = pinLockDetect;
-  // settings for 100 mhz internal
+  // settings for 10 mhz internal
   reffreq = REF_FREQ_DEFAULT ;
   enabled = false ;
   cfreq = 0 ;
@@ -346,10 +346,8 @@ void ADF4351::disable()
 void ADF4351::writeDev(int n, Reg r)
 {
   uint32_t _regData ;
-  int i ;
   digitalWrite(_pinSlaveSelect, LOW) ;
   delayMicroseconds(10) ;
-  i=n ; // not used 
   _regData = r.whole;
   for(int i=0; i<32; i++)
 	{
