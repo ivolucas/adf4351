@@ -99,6 +99,7 @@ ADF4351::ADF4351(byte pinClk, byte pinData,byte pinSlaveSelect, byte pinChipEnab
   // settings for 10 mhz internal
   reffreq = REF_FREQ_DEFAULT ;
   enabled = false ;
+  softwarePowerDown = false;
   cfreq = 0 ;
   ChanStep = steps[0] ;
   RD2refdouble = 0 ;
@@ -199,7 +200,13 @@ int  ADF4351::setf(uint32_t freq)
 
   cfreq = BN_cfreq ;
 
-  if ( cfreq != freq ) Serial.println(F("output freq diff than requested")) ;
+  if ( cfreq != freq ){
+    Serial.print(F("output freq:")) ;
+    Serial.print(cfreq);
+    Serial.print(F(", diff than requested:"));
+    Serial.println(freq);
+    
+  } 
 
   BigNumber::finish() ;
 
@@ -240,7 +247,7 @@ int  ADF4351::setf(uint32_t freq)
   R[2].setbf(0, 3, 2) ; // control bits
   // (3,1,0) counter reset
   // (4,1,0) cp3 state
-  // (5,1,0) power down
+  R[2].setbf(5, 1, softwarePowerDown);// power down
   R[2].setbf(6, 1, 1) ; // pd polarity
 
   if ( Frac == 0 )  {

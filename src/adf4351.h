@@ -221,6 +221,11 @@ class ADF4351
        stores the current frequency generation on/off status
     */
     byte enabled ;
+
+    /*!
+       stores the software power-down
+    */
+    byte softwarePowerDown ;
     /*!
        stores the calculated frequency (vs the desired frequency)
        used to check for issues in the setf() function.
