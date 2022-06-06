@@ -167,6 +167,10 @@ class ADF4351
     void writeDev(int n, Reg r) ;
 
     /*!
+       writes the 6 registers value to the device
+    */
+    void writeAllRegToDevice();
+    /*!
        gets the value of the device register
        @param n nth register on the device
        @return the current value of the register
@@ -179,6 +183,7 @@ class ADF4351
        @param v value 2
        @return the greatest common denominator
     */
+
     uint32_t gcd_iter(uint32_t u, uint32_t v) ;
     /*!
        stores the spi

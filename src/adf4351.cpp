@@ -50,46 +50,44 @@
 
 #include "adf4351.h"
 
-uint32_t steps[] = { 1000, 5000, 10000, 50000, 100000 , 500000, 1000000 }; ///< Array of Allowed Step Values (Hz)
-
+uint32_t steps[] = {1000, 5000, 10000, 50000, 100000, 500000, 1000000}; ///< Array of Allowed Step Values (Hz)
 
 /*!
    single register constructor
 */
 Reg::Reg()
 {
-  whole = 0 ;
+  whole = 0;
 }
 
 uint32_t Reg::get()
 {
-  return whole ;
+  return whole;
 }
 
 void Reg::set(uint32_t value)
 {
-  whole = value  ;
+  whole = value;
 }
 
 void Reg::setbf(uint8_t start, uint8_t len, uint32_t value)
 {
-  uint32_t bitmask =  ((1UL  << len) - 1UL) ;
-  value &= bitmask  ;
-  bitmask <<= start ;
-  whole = ( whole & ( ~bitmask)) | ( value << start ) ;
+  uint32_t bitmask = ((1UL << len) - 1UL);
+  value &= bitmask;
+  bitmask <<= start;
+  whole = (whole & (~bitmask)) | (value << start);
 }
 
-uint32_t  Reg::getbf(uint8_t start, uint8_t len)
+uint32_t Reg::getbf(uint8_t start, uint8_t len)
 {
-  uint32_t bitmask =  ((1UL  << len) - 1UL) << start ;
-  uint32_t result = ( whole & bitmask) >> start  ;
-  return ( result ) ;
+  uint32_t bitmask = ((1UL << len) - 1UL) << start;
+  uint32_t result = (whole & bitmask) >> start;
+  return (result);
 }
 
 // ADF4351 settings
 
-
-ADF4351::ADF4351(byte pinClk, byte pinData,byte pinSlaveSelect, byte pinChipEnable,byte pinLockDetect)
+ADF4351::ADF4351(byte pinClk, byte pinData, byte pinSlaveSelect, byte pinChipEnable, byte pinLockDetect)
 {
   this->_pinClk = pinClk;
   this->_pinData = pinData;
@@ -97,303 +95,322 @@ ADF4351::ADF4351(byte pinClk, byte pinData,byte pinSlaveSelect, byte pinChipEnab
   this->_pinChipEnable = pinChipEnable;
   this->_pinLockDetect = pinLockDetect;
   // settings for 10 mhz internal
-  reffreq = REF_FREQ_DEFAULT ;
-  enabled = false ;
+  reffreq = REF_FREQ_DEFAULT;
+  enabled = false;
   softwarePowerDown = false;
-  cfreq = 0 ;
-  ChanStep = steps[0] ;
-  RD2refdouble = 0 ;
-  RCounter = 25 ;
-  RD1Rdiv2 = 0 ;
-  BandSelClock = 80 ;
-  ClkDiv = 150 ;
-  Prescaler = 0 ;
-  pwrlevel = 0 ;
+  cfreq = 0;
+  ChanStep = steps[0];
+  RD2refdouble = 0;
+  RCounter = 25;
+  RD1Rdiv2 = 0;
+  BandSelClock = 80;
+  ClkDiv = 150;
+  Prescaler = 0;
+  pwrlevel = 0;
   muxOut = ADF_MUX_OUT_DIGITAL_LOCK_DETECT;
-  
 }
 
 void ADF4351::init()
 {
 
-  pinMode(_pinClk, OUTPUT) ;
-  digitalWrite(_pinClk, LOW) ;
-  pinMode(_pinData, OUTPUT) ;
-  digitalWrite(_pinData, LOW) ;
-  pinMode(_pinSlaveSelect, OUTPUT) ;
-  digitalWrite(_pinSlaveSelect, LOW) ;
-  if(_pinChipEnable>=0)
-  pinMode(_pinChipEnable, OUTPUT) ;
-  if(_pinLockDetect>=0)
-  pinMode(_pinLockDetect, INPUT) ;
-  
-} ;
+  pinMode(_pinClk, OUTPUT);
+  digitalWrite(_pinClk, LOW);
+  pinMode(_pinData, OUTPUT);
+  digitalWrite(_pinData, LOW);
+  pinMode(_pinSlaveSelect, OUTPUT);
+  digitalWrite(_pinSlaveSelect, LOW);
+  if (_pinChipEnable >= 0)
+    pinMode(_pinChipEnable, OUTPUT);
+  if (_pinLockDetect >= 0)
+    pinMode(_pinLockDetect, INPUT);
+};
 
-
-int  ADF4351::setf(uint32_t freq)
+int ADF4351::setf(uint32_t freq)
 {
   //  calculate settings from freq
-  if ( freq > ADF_FREQ_MAX ) return 1 ;
+  if (freq > ADF_FREQ_MAX)
+    return 1;
 
-  if ( freq < ADF_FREQ_MIN ) return 1 ;
+  if (freq < ADF_FREQ_MIN)
+    return 1;
 
-  int localosc_ratio =   2200000000UL / freq ;
-  outdiv = 1 ;
-  int RfDivSel = 0 ;
+  int localosc_ratio = 2200000000UL / freq;
+  outdiv = 1;
+  int RfDivSel = 0;
 
   // select the output divider
-  while (  outdiv <=  localosc_ratio   && outdiv <= 64 ) {
-    outdiv *= 2 ;
-    RfDivSel++  ;
+  while (outdiv <= localosc_ratio && outdiv <= 64)
+  {
+    outdiv *= 2;
+    RfDivSel++;
   }
 
-  if ( freq > 3600000000UL/outdiv )
-    Prescaler = 1 ;
+  if (freq > 3600000000UL / outdiv)
+    Prescaler = 1;
   else
-    Prescaler = 0 ;
+    Prescaler = 0;
 
-  PFDFreq = (float) reffreq  * ( (float) ( 1.0 + RD2refdouble) / (float) (RCounter * (1.0 + RD1Rdiv2)));  // find the loop freq
-  BigNumber::begin(10) ;
-  char tmpstr[20] ;
+  PFDFreq = (float)reffreq * ((float)(1.0 + RD2refdouble) / (float)(RCounter * (1.0 + RD1Rdiv2))); // find the loop freq
+  BigNumber::begin(10);
+  char tmpstr[20];
   // kludge - BigNumber doesn't like leading spaces
   // so you need to make sure the string passed doesnt
   // have leading spaces.
-  int cntdigits = 0 ;
-  uint32_t num = (uint32_t) ( PFDFreq / 10000 ) ;
+  int cntdigits = 0;
+  uint32_t num = (uint32_t)(PFDFreq / 10000);
 
-  while ( num != 0 )  {
-    cntdigits++ ;
-    num /= 10 ;
+  while (num != 0)
+  {
+    cntdigits++;
+    num /= 10;
   }
 
-  dtostrf(PFDFreq, cntdigits + 8 , 3, tmpstr) ;
+  dtostrf(PFDFreq, cntdigits + 8, 3, tmpstr);
   // end of kludge
-  BigNumber BN_PFDFreq = BigNumber(tmpstr) ;
-  BigNumber BN_N = ( BigNumber(freq) * BigNumber(outdiv) ) / BN_PFDFreq ;
-  N_Int =  (uint16_t) ( (uint32_t)  BN_N ) ;
-  BigNumber BN_Mod = BN_PFDFreq / BigNumber(ChanStep) ;
-  Mod = BN_Mod ;
-  BN_Mod = BigNumber(Mod) ;
-  BigNumber BN_Frac = ((BN_N - BigNumber(N_Int)) * BN_Mod)  + BigNumber("0.5")  ;
-  Frac = (int) ( (uint32_t) BN_Frac);
-  BN_N = BigNumber(N_Int) ;
+  BigNumber BN_PFDFreq = BigNumber(tmpstr);
+  BigNumber BN_N = (BigNumber(freq) * BigNumber(outdiv)) / BN_PFDFreq;
+  N_Int = (uint16_t)((uint32_t)BN_N);
+  BigNumber BN_Mod = BN_PFDFreq / BigNumber(ChanStep);
+  Mod = BN_Mod;
+  BN_Mod = BigNumber(Mod);
+  BigNumber BN_Frac = ((BN_N - BigNumber(N_Int)) * BN_Mod) + BigNumber("0.5");
+  Frac = (int)((uint32_t)BN_Frac);
+  BN_N = BigNumber(N_Int);
 
-  if ( Frac != 0  ) {
-    uint32_t gcd = gcd_iter(Frac, Mod) ;
+  if (Frac != 0)
+  {
+    uint32_t gcd = gcd_iter(Frac, Mod);
 
-    if ( gcd > 1 ) {
-      Frac /= gcd ;
-      BN_Frac = BigNumber(Frac) ;
-      Mod /= gcd ;
-      BN_Mod = BigNumber(Mod) ;
+    if (gcd > 1)
+    {
+      Frac /= gcd;
+      BN_Frac = BigNumber(Frac);
+      Mod /= gcd;
+      BN_Mod = BigNumber(Mod);
     }
   }
 
-  BigNumber BN_cfreq ;
+  BigNumber BN_cfreq;
 
-  if ( Frac == 0 ) {
-    BN_cfreq = ( BN_PFDFreq  * BN_N) / BigNumber(outdiv) ;
-
-  } else {
-    BN_cfreq = ( BN_PFDFreq * ( BN_N + ( BN_Frac /  BN_Mod) ) ) / BigNumber(outdiv) ;
+  if (Frac == 0)
+  {
+    BN_cfreq = (BN_PFDFreq * BN_N) / BigNumber(outdiv);
+  }
+  else
+  {
+    BN_cfreq = (BN_PFDFreq * (BN_N + (BN_Frac / BN_Mod))) / BigNumber(outdiv);
   }
 
-  cfreq = BN_cfreq ;
+  cfreq = BN_cfreq;
 
-  if ( cfreq != freq ){
-    Serial.print(F("output freq:")) ;
+  if (cfreq != freq)
+  {
+    Serial.print(F("output freq:"));
     Serial.print(cfreq);
     Serial.print(F(", diff than requested:"));
     Serial.println(freq);
-    
-  } 
-
-  BigNumber::finish() ;
-
-  if ( Mod < 2 || Mod > 4095) {
-    Serial.println(F("Mod out of range")) ;
-    return 1 ;
   }
 
-  if ( (uint32_t) Frac > (Mod - 1) ) {
-    Serial.println(F("Frac out of range")) ;
-    return 1 ;
-  }
+  BigNumber::finish();
 
-  if ( Prescaler == 0 && ( N_Int < 23  || N_Int > 65535)) {
-    Serial.println(F("N_Int out of range")) ;
+  if (Mod < 2 || Mod > 4095)
+  {
+    Serial.println(F("Mod out of range"));
     return 1;
+  }
 
-  } else if ( Prescaler == 1 && ( N_Int < 75 || N_Int > 65535 )) {
-    Serial.println(F("N_Int out of range")) ;
+  if ((uint32_t)Frac > (Mod - 1))
+  {
+    Serial.println(F("Frac out of range"));
+    return 1;
+  }
+
+  if (Prescaler == 0 && (N_Int < 23 || N_Int > 65535))
+  {
+    Serial.println(F("N_Int out of range"));
+    return 1;
+  }
+  else if (Prescaler == 1 && (N_Int < 75 || N_Int > 65535))
+  {
+    Serial.println(F("N_Int out of range"));
     return 1;
   }
 
   // setting the registers to default values
   // R0
-  R[0].set(0UL) ;
+  R[0].set(0UL);
   // (0,3,0) control bits
-  R[0].setbf(3, 12, Frac) ; // fractonal
-  R[0].setbf(15, 16, N_Int) ; // N integer
+  R[0].setbf(3, 12, Frac);   // fractonal
+  R[0].setbf(15, 16, N_Int); // N integer
   // R1
-  R[1].set(0UL) ;
-  R[1].setbf(0, 3, 1) ; // control bits
-  R[1].setbf(3, 12, Mod) ; // Mod
-  R[1].setbf(15, 12, 1); // phase
+  R[1].set(0UL);
+  R[1].setbf(0, 3, 1);          // control bits
+  R[1].setbf(3, 12, Mod);       // Mod
+  R[1].setbf(15, 12, 1);        // phase
   R[1].setbf(27, 1, Prescaler); //  prescaler
   // (28,1,0) phase adjust
   // R2
-  R[2].set(0UL) ;
-  R[2].setbf(0, 3, 2) ; // control bits
+  R[2].set(0UL);
+  R[2].setbf(0, 3, 2); // control bits
   // (3,1,0) counter reset
   // (4,1,0) cp3 state
-  R[2].setbf(5, 1, softwarePowerDown);// power down
-  R[2].setbf(6, 1, 1) ; // pd polarity
+  R[2].setbf(5, 1, softwarePowerDown); // power down
+  R[2].setbf(6, 1, 1);                 // pd polarity
 
-  if ( Frac == 0 )  {
-    R[2].setbf(7, 1, 1) ; // LDP, int-n mode
-    R[2].setbf(8, 1, 1) ; // ldf, int-n mode
-
-  } else {
-    R[2].setbf(7, 1, 0) ; // LDP, frac-n mode
-    R[2].setbf(8, 1, 0) ; // ldf ,frac-n mode
+  if (Frac == 0)
+  {
+    R[2].setbf(7, 1, 1); // LDP, int-n mode
+    R[2].setbf(8, 1, 1); // ldf, int-n mode
+  }
+  else
+  {
+    R[2].setbf(7, 1, 0); // LDP, frac-n mode
+    R[2].setbf(8, 1, 0); // ldf ,frac-n mode
   }
 
-  R[2].setbf(9, 4, 7) ; // charge pump
+  R[2].setbf(9, 4, 7); // charge pump
   // (13,1,0) dbl buf
-  R[2].setbf(14, 10, RCounter) ; //  r counter
-  R[2].setbf(24, 1, RD1Rdiv2)  ; // RD1_RDiv2
-  R[2].setbf(25, 1, RD2refdouble)  ; // RD2refdouble
-  R[2].setbf(26,3, muxOut) ; //  muxout
+  R[2].setbf(14, 10, RCounter);    //  r counter
+  R[2].setbf(24, 1, RD1Rdiv2);     // RD1_RDiv2
+  R[2].setbf(25, 1, RD2refdouble); // RD2refdouble
+  R[2].setbf(26, 3, muxOut);       //  muxout
   // (29,2,0) low noise and spurs mode
   // R3
-  R[3].set(0UL) ;
-  R[3].setbf(0, 3, 3) ; // control bits
-  R[3].setbf(3, 12, ClkDiv) ; // clock divider
+  R[3].set(0UL);
+  R[3].setbf(0, 3, 3);       // control bits
+  R[3].setbf(3, 12, ClkDiv); // clock divider
 
   // (15,2,0) clk div mode
   // (17,1,0) reserved
   // (18,1,0) CSR
   // (19,2,0) reserved
-  if ( Frac == 0 )  {
+  if (Frac == 0)
+  {
     R[3].setbf(21, 1, 1); //  charge cancel, reduces pfd spurs
     R[3].setbf(22, 1, 1); //  ABP, int-n
-
-  } else  {
-    R[3].setbf(21, 1, 0) ; //  charge cancel
+  }
+  else
+  {
+    R[3].setbf(21, 1, 0); //  charge cancel
     R[3].setbf(22, 1, 0); //  ABP, frac-n
   }
 
-  R[3].setbf(23, 1, 1) ; // Band Select Clock Mode
+  R[3].setbf(23, 1, 1); // Band Select Clock Mode
   // (24,8,0) reserved
   // R4
-  R[4].set(0UL) ;
-  R[4].setbf(0, 3, 4) ; // control bits
-  R[4].setbf(3, 2, pwrlevel) ; // output power 0-3 (-4dbM to 5dbM, 3db steps)
-  R[4].setbf(5, 1, 1) ; // rf output enable
+  R[4].set(0UL);
+  R[4].setbf(0, 3, 4);        // control bits
+  R[4].setbf(3, 2, pwrlevel); // output power 0-3 (-4dbM to 5dbM, 3db steps)
+  R[4].setbf(5, 1, 1);        // rf output enable
   // (6,2,0) aux output power
   // (8,1,0) aux output enable
   // (9,1,0) aux output select
   // (10,1,0) mtld
   // (11,1,0) vco power down
-  R[4].setbf(12, 8, BandSelClock) ; // band select clock divider
-  R[4].setbf(20, 3, RfDivSel) ; // rf divider select
-  R[4].setbf(23, 1, 1) ; // feedback select
+  R[4].setbf(12, 8, BandSelClock); // band select clock divider
+  R[4].setbf(20, 3, RfDivSel);     // rf divider select
+  R[4].setbf(23, 1, 1);            // feedback select
   // (24,8,0) reserved
   // R5
-  R[5].set(0UL) ;
-  R[5].setbf(0, 3, 5) ; // control bits
+  R[5].set(0UL);
+  R[5].setbf(0, 3, 5); // control bits
   // (3,16,0) reserved
-  R[5].setbf(19, 2, 3) ; // Reserved field,set to 11
+  R[5].setbf(19, 2, 3); // Reserved field,set to 11
   // (21,1,0) reserved
-  R[5].setbf(22, 2, 1) ; // LD Pin Mode
+  R[5].setbf(22, 2, 1); // LD Pin Mode
   // (24,8,0) reserved
-  int i ;
+  
+  writeAllRegToDevice();
+  return 0; // ok
+}
 
-  for (i = 5 ; i > -1 ; i--) {
-    writeDev(i, R[i]) ;
-    delayMicroseconds(2500) ;
+void ADF4351::writeAllRegToDevice()
+{
+  int i;
+  for (i = 5; i > -1; i--)
+  {
+    writeDev(i, R[i]);
+    delayMicroseconds(2500);
   }
-
-  return 0 ;  // ok
 }
 
 int ADF4351::setrf(uint32_t f)
 {
-  if ( f > ADF_REFIN_MAX ) return 1 ;
+  if (f > ADF_REFIN_MAX)
+    return 1;
 
-  if ( f < 100000UL ) return 1 ;
+  if (f < 100000UL)
+    return 1;
 
-  float newfreq  =  (float) f  * ( (float) ( 1.0 + RD2refdouble) / (float) (RCounter * (1.0 + RD1Rdiv2)));  // check the loop freq
+  float newfreq = (float)f * ((float)(1.0 + RD2refdouble) / (float)(RCounter * (1.0 + RD1Rdiv2))); // check the loop freq
 
-  if ( newfreq > ADF_PFD_MAX ) return 1 ;
+  if (newfreq > ADF_PFD_MAX)
+    return 1;
 
-  if ( newfreq < ADF_PFD_MIN ) return 1 ;
+  if (newfreq < ADF_PFD_MIN)
+    return 1;
 
-  reffreq = f ;
-  return 0 ;
+  reffreq = f;
+  return 0;
 }
 
 void ADF4351::enable()
 {
 
-  enabled = true ;
-  if(_pinChipEnable>=0)
-    digitalWrite(_pinChipEnable, HIGH) ;
+  enabled = true;
+  if (_pinChipEnable >= 0)
+    digitalWrite(_pinChipEnable, HIGH);
 }
 
 void ADF4351::disable()
 {
-  enabled = false ;
-  if(_pinChipEnable>=0)
-    digitalWrite(_pinChipEnable, LOW) ;
+  enabled = false;
+  if (_pinChipEnable >= 0)
+    digitalWrite(_pinChipEnable, LOW);
 }
-
 
 void ADF4351::writeDev(int n, Reg r)
 {
-  uint32_t _regData ;
-  digitalWrite(_pinSlaveSelect, LOW) ;
-  delayMicroseconds(10) ;
+  uint32_t _regData;
+  digitalWrite(_pinSlaveSelect, LOW);
+  delayMicroseconds(10);
   _regData = r.whole;
-  for(int i=0; i<32; i++)
-	{
-		if(((_regData<<i)&0x80000000)==0x80000000)
-		{
-			digitalWrite(_pinData,1);
-			
-		}
-		else
-		{
-			digitalWrite(_pinData,0) ;
-			
-		}
+  for (int i = 0; i < 32; i++)
+  {
+    if (((_regData << i) & 0x80000000) == 0x80000000)
+    {
+      digitalWrite(_pinData, 1);
+    }
+    else
+    {
+      digitalWrite(_pinData, 0);
+    }
 
-		digitalWrite(_pinClk, HIGH);
-		delayMicroseconds(5);
-		digitalWrite(_pinClk, LOW);
-	}
+    digitalWrite(_pinClk, HIGH);
+    delayMicroseconds(5);
+    digitalWrite(_pinClk, LOW);
+  }
 
-  digitalWrite(_pinSlaveSelect, HIGH) ;
-  delayMicroseconds(5) ;
-  digitalWrite(_pinSlaveSelect, LOW) ;
+  digitalWrite(_pinSlaveSelect, HIGH);
+  delayMicroseconds(5);
+  digitalWrite(_pinSlaveSelect, LOW);
 }
 
-
-uint32_t   ADF4351::getReg(int n)
+uint32_t ADF4351::getReg(int n)
 {
-  return R[n].whole ;
+  return R[n].whole;
 }
 
 uint32_t ADF4351::gcd_iter(uint32_t u, uint32_t v)
 {
   uint32_t t;
 
-  while (v) {
-    t = u ;
-    u = v ;
-    v = t % v ;
+  while (v)
+  {
+    t = u;
+    u = v;
+    v = t % v;
   }
 
-  return u ;
+  return u;
 }
