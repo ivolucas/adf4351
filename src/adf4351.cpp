@@ -319,9 +319,16 @@ int ADF4351::setf(uint32_t freq)
   // (21,1,0) reserved
   R[5].setbf(22, 2, 1); // LD Pin Mode
   // (24,8,0) reserved
-  
+
   writeAllRegToDevice();
   return 0; // ok
+}
+
+
+void ADF4351::updateSoftwarePowerDown(){
+  R[2].setbf(5, 1, softwarePowerDown); // power down or up
+  writeDev(i, R[2]);
+  delayMicroseconds(500);
 }
 
 void ADF4351::writeAllRegToDevice()
@@ -369,7 +376,7 @@ void ADF4351::disable()
     digitalWrite(_pinChipEnable, LOW);
 }
 
-void ADF4351::writeDev(int n, Reg r)
+void ADF4351::writeDev(Reg r)
 {
   uint32_t _regData;
   digitalWrite(_pinSlaveSelect, LOW);

@@ -161,10 +161,15 @@ class ADF4351
     /*!
        writes the register value to the device
        normally used as an internal helper function
-       @param n nth register to write to
        @param r the register value to write
     */
-    void writeDev(int n, Reg r) ;
+    void writeDev(Reg r) ;
+
+    /*!
+       writes the 6 registers value to the device
+       Updates R2 register SoftwarePowerDown flag and sends it to device
+    */
+    void ADF4351::updateSoftwarePowerDown();
 
     /*!
        writes the 6 registers value to the device
