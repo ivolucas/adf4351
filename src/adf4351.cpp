@@ -327,7 +327,7 @@ int ADF4351::setf(uint32_t freq)
 
 void ADF4351::updateSoftwarePowerDown(){
   R[2].setbf(5, 1, softwarePowerDown); // power down or up
-  writeDev(i, R[2]);
+  writeDev(R[2]);
   delayMicroseconds(500);
 }
 
@@ -336,7 +336,7 @@ void ADF4351::writeAllRegToDevice()
   int i;
   for (i = 5; i > -1; i--)
   {
-    writeDev(i, R[i]);
+    writeDev(R[i]);
     delayMicroseconds(2500);
   }
 }

@@ -169,7 +169,7 @@ class ADF4351
        writes the 6 registers value to the device
        Updates R2 register SoftwarePowerDown flag and sends it to device
     */
-    void ADF4351::updateSoftwarePowerDown();
+    void updateSoftwarePowerDown();
 
     /*!
        writes the 6 registers value to the device
