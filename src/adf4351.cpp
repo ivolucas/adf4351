@@ -215,13 +215,15 @@ int ADF4351::setf(uint32_t freq)
 
   if (Mod < 2 || Mod > 4095)
   {
-    Serial.println(F("Mod out of range"));
+    Serial.print(F("Mod out of range:"));
+    Serial.println(Mod);
     return 1;
   }
 
   if ((uint32_t)Frac > (Mod - 1))
   {
-    Serial.println(F("Frac out of range"));
+    Serial.print(F("Frac out of range:"));
+    Serial.println(Frac);
     return 1;
   }
 
@@ -338,6 +340,20 @@ void ADF4351::writeAllRegToDevice()
   {
     writeDev(R[i]);
     delayMicroseconds(2500);
+  }
+}
+
+void ADF4351::logAllReg()
+{
+  int i;
+  uint32_t _regData = 0;
+  for (i = 0; i <6  ; i++)
+  {
+    Serial.print('R');
+    Serial.print(i);
+    Serial.print(':');
+    Serial.print(R[i].whole,HEX);
+    Serial.println();
   }
 }
 
