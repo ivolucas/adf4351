@@ -175,6 +175,8 @@ class ADF4351
        writes the 6 registers value to the device
     */
     void writeAllRegToDevice();
+    void logAllReg();
+    
     /*!
        gets the value of the device register
        @param n nth register on the device
